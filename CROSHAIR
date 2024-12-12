@@ -1,0 +1,148 @@
+  local settings = {
+    color = Color3.fromRGB(255, 127, 255),
+    thickness = 2,
+    length = 8,
+    opacity = 1,
+    x_offset = 0,
+    y_offset = 0,
+    recenter = true,
+    spinning = false, 
+    pulsing = false   
+}
+
+local cam = workspace.CurrentCamera or workspace:FindFirstChildOfClass("Camera")
+getgenv().crosshair_x = getgenv().crosshair_x or {}
+getgenv().crosshair_y = getgenv().crosshair_y or {}
+
+local function draw(a1, a2)
+    local obj = Drawing.new(a1)
+    for i, v in pairs(a2) do
+        obj[i] = v
+    end
+    return obj
+end
+
+local function clearCrosshair()
+    if getgenv().crosshair_x["Line"] then
+        getgenv().crosshair_x["Line"]:Remove()
+    end
+    if getgenv().crosshair_y["Line"] then
+        getgenv().crosshair_y["Line"]:Remove()
+    end
+    getgenv().crosshair_x = {}
+    getgenv().crosshair_y = {}
+end
+
+clearCrosshair()
+
+local angle = 0
+local pulseSize = settings.length
+
+local function updateCrosshair()
+    local cx, cy = cam.ViewportSize.x / 2, cam.ViewportSize.y / 2
+
+    
+    if settings.spinning then
+        angle = (angle + math.rad(1)) % (2 * math.pi)
+    else
+        angle = 0 
+    end
+
+    
+    if settings.pulsing then
+        pulseSize = settings.length + math.sin(tick() * 5) * 4
+    else
+        pulseSize = settings.length 
+    end
+
+    
+    getgenv().crosshair_x["Line"]["To"] = Vector2.new(
+        cx - math.cos(angle) * pulseSize - settings.x_offset,
+        cy - math.sin(angle) * pulseSize - settings.y_offset
+    )
+    getgenv().crosshair_x["Line"]["From"] = Vector2.new(
+        cx + math.cos(angle) * pulseSize - settings.x_offset,
+        cy + math.sin(angle) * pulseSize - settings.y_offset
+    )
+
+    getgenv().crosshair_y["Line"]["To"] = Vector2.new(
+        cx - math.sin(angle) * pulseSize - settings.x_offset,
+        cy - math.cos(angle) * pulseSize - settings.y_offset
+    )
+    getgenv().crosshair_y["Line"]["From"] = Vector2.new(
+        cx + math.sin(angle) * pulseSize - settings.x_offset,
+        cy + math.cos(angle) * pulseSize - settings.y_offset
+    )
+end
+
+getgenv().crosshair_x["Line"] = draw("Line", {
+    Thickness = settings.thickness,
+    Color = settings.color,
+    Transparency = settings.opacity,
+    Visible = true
+})
+
+getgenv().crosshair_y["Line"] = draw("Line", {
+    Thickness = settings.thickness,
+    Color = settings.color,
+    Transparency = settings.opacity,
+    Visible = true
+})
+
+game:GetService("RunService").RenderStepped:Connect(updateCrosshair)
+
+
+local screenGui = Instance.new("ScreenGui", game.CoreGui)
+local buttonFrame = Instance.new("Frame", screenGui)
+buttonFrame.Size = UDim2.new(0, 200, 0, 120)
+buttonFrame.Position = UDim2.new(0, 10, 0, 10)
+buttonFrame.BackgroundColor3 = Color3.fromRGB(8, 8, 8)  
+buttonFrame.BorderSizePixel = 1 
+buttonFrame.BorderColor3 = Color3.fromRGB(102, 102, 102) 
+
+
+local titleLabel = Instance.new("TextLabel", buttonFrame)
+titleLabel.Size = UDim2.new(0, 200, 0, 20)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.Text = "Lanzet.net"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 18
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255) 
+titleLabel.BackgroundTransparency = 1
+
+
+local spinToggle = Instance.new("TextButton", buttonFrame)
+spinToggle.Size = UDim2.new(0, 200, 0, 50)
+spinToggle.Position = UDim2.new(0, 0, 0, 20)
+spinToggle.Text = "Spin: OFF"
+spinToggle.Font = Enum.Font.GothamBold
+spinToggle.TextSize = 16
+spinToggle.TextColor3 = Color3.fromRGB(255, 255, 255) 
+spinToggle.BackgroundColor3 = Color3.fromRGB(8, 8, 08) 
+spinToggle.BorderSizePixel = 1
+spinToggle.BorderColor3 = Color3.fromRGB(102, 102, 102) 
+
+
+local pulseToggle = Instance.new("TextButton", buttonFrame)
+pulseToggle.Size = UDim2.new(0, 200, 0, 50)
+pulseToggle.Position = UDim2.new(0, 0, 0, 70)
+pulseToggle.Text = "Pulse: OFF"
+pulseToggle.Font = Enum.Font.GothamBold
+pulseToggle.TextSize = 16
+pulseToggle.TextColor3 = Color3.fromRGB(255, 255, 255) 
+pulseToggle.BackgroundColor3 = Color3.fromRGB(8, 8, 8) 
+pulseToggle.BorderSizePixel = 1
+pulseToggle.BorderColor3 = Color3.fromRGB(102, 102, 102) 
+
+
+spinToggle.MouseButton1Click:Connect(function()
+    settings.spinning = not settings.spinning
+    spinToggle.Text = "Spin: " .. (settings.spinning and "ON" or "OFF")
+    spinToggle.BackgroundColor3 = settings.spinning and Color3.fromRGB(75, 0, 75) or Color3.fromRGB(0, 0, 0)
+end)
+
+pulseToggle.MouseButton1Click:Connect(function()
+    settings.pulsing = not settings.pulsing
+    pulseToggle.Text = "Pulse: " .. (settings.pulsing and "ON" or "OFF")
+    pulseToggle.BackgroundColor3 = settings.pulsing and Color3.fromRGB(75, 0, 75) or Color3.fromRGB(0, 0, 0)
+end)
